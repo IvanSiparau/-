@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Игра Жизнь</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 50px;
+        font-family: Arial, sans-serif;
+    }
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(20, 20px);
+        grid-template-rows: repeat(20, 20px);
+        gap: 1px;
+        border: 1px solid #333;
+        margin-bottom: 20px;
+    }
+    .cell {
+        width: 20px;
+        height: 20px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+    }
+    button {
+        padding: 10px 20px;
+        margin: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div class="grid-container" id="gridContainer"></div>
+<div>
+    <button onclick="startGame()">Старт</button>
+    <button onclick="stopGame()">Стоп</button>
+    <button onclick="clearGrid()">Очистить</button>
+    <button onclick="randomizeGrid()">Случайное заполнение</button>
+    <button onclick="glider()">Планер</button>
+</div>
+<script>
+    let grid = [];
+    const numRows = 20;
+    const numCols = 20;
+    let intervalId;
+
+    function createGrid() {
+        const gridContainer = document.getElementById('gridContainer');
+        for (let i = 0; i < numRows; i++) {
+            grid[i] = [];
+            for (let j = 0; j < numCols; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.row = i;
+                cell.dataset.col = j;
+                gridContainer.appendChild(cell);
+                grid[i][j] = false;
+            }
+        }
+        gridContainer.addEventListener('click', toggleCell);
+    }
+
+    function toggleCell(event) {
+        const cell = event.target;
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        grid[row][col] = !grid[row][col];
+        cell.style.backgroundColor = grid[row][col] ? '#333' : '#fff';
+    }
+
+    function startGame() {
+        intervalId = setInterval(updateGrid, 100);
+    }
+
+    function stopGame() {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+
+    function clearGrid() {
+        stopGame();
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            grid[row][col] = false;
+            cell.style.backgroundColor = '#fff';
+        });
+    }
+
+    function randomizeGrid() {
+        clearGrid();
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            grid[row][col] = Math.random() < 0.5;
+            cell.style.backgroundColor = grid[row][col] ? '#333' : '#fff';
+        });
+    }
+
+    function glider() {
+        clearGrid();
+        grid[5][5] = true;
+        grid[5][6] = true;
+        grid[5][7] = true;
+        grid[4][7] = true;
+        grid[3][6] = true;
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            cell.style.backgroundColor = grid[row][col] ? '#333' : '#fff';
+        });
+    }
+
+    function updateGrid() {
+        const newGrid = [];
+        for (let i = 0; i < numRows; i++) {
+            newGrid[i] = [];
+            for (let j = 0; j < numCols; j++) {
+                const neighbors = countNeighbors(i, j);
+                if (grid[i][j]) {
+                    newGrid[i][j] = neighbors === 2 || neighbors === 3;
+                } else {
+                    newGrid[i][j] = neighbors === 3;
+                }
+            }
+        }
+        for (let i = 0; i < numRows; i++) {
+            for (let j = 0; j < numCols; j++) {
+                grid[i][j] = newGrid[i][j];
+                const cell = document.querySelector(`.cell[data-row="${i}"][data-col="${j}"]`);
+                cell.style.backgroundColor = grid[i][j] ? '#333' : '#fff';
+            }
+        }
+    }
+
+    function countNeighbors(row, col) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                if (i === 0 && j === 0) continue;
+                const newRow = row + i;
+                const newCol = col + j;
+                if (newRow >= 0 && newRow < numRows && newCol >= 0 && newCol < numCols) {
+                    if (grid[newRow][newCol]) count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    createGrid();
+</script>
+</body>
+</html>
